@@ -6,7 +6,8 @@ def scan_xss(session, url):
     """Scans a given URL for Reflected XSS vulnerabilities and returns findings."""
     vulnerabilities = set()
     try:
-        response = session.get(url)
+        # Add a timeout to the request
+        response = session.get(url, timeout=5)
         soup = BeautifulSoup(response.content, 'html.parser')
         forms = soup.find_all('form')
 
@@ -27,9 +28,11 @@ def scan_xss(session, url):
                     post_data[name] = value
             
             if method == 'post':
-                response = session.post(post_url, data=post_data)
+                # Add a timeout to the request
+                response = session.post(post_url, data=post_data, timeout=5)
             else:
-                response = session.get(post_url, params=post_data)
+                # Add a timeout to the request
+                response = session.get(post_url, params=post_data, timeout=5)
 
             if "<script>test</script>" in response.text:
                 vulnerabilities.add((post_url, method))
@@ -42,7 +45,8 @@ def scan_sqli(session, url):
     is_vulnerable = False
     try:
         sqli_test_url = f"{url}'"
-        response = session.get(sqli_test_url)
+        # Add a timeout to the request
+        response = session.get(sqli_test_url, timeout=5)
         sql_errors = {"you have an error in your sql syntax", "warning: mysql_fetch_array()", "unclosed quotation mark after the character string"}
         for error in sql_errors:
             if error in response.text.lower():
