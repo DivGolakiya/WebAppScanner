@@ -13,7 +13,6 @@ st.write("Enter the full URL of a website you are authorized to test, and the sc
 st.warning("**Disclaimer:** This tool is for educational purposes only. Only use it on websites you own or have explicit permission to test. Unauthorized scanning is illegal.", icon="⚠️")
 
 # --- Initialize Session State ---
-# This will run only once at the start of the session.
 if 'scan_results' not in st.session_state:
     st.session_state.scan_results = None
 
@@ -26,7 +25,6 @@ if st.button("Start Scan", type="primary"):
         with st.spinner("Scanning in progress... This may take a while."):
             session = requests.Session()
             
-            # Run all scans and store the results in a dictionary
             crawler = Crawler(target_url, session, page_limit=max_pages)
             links = crawler.discover_links()
             xss_vulnerabilities = set()
@@ -38,7 +36,6 @@ if st.button("Start Scan", type="primary"):
             
             final_report = generate_report(target_url, xss_vulnerabilities, sqli_vulnerabilities)
             
-            # Save all necessary info to the session state
             st.session_state.scan_results = {
                 "links": links,
                 "report": final_report,
@@ -47,20 +44,27 @@ if st.button("Start Scan", type="primary"):
     else:
         st.error("Please enter a target URL to start the scan.")
 
-# --- Display Results (only if they exist in the session state) ---
+# --- Display Results ---
 if st.session_state.scan_results:
     results = st.session_state.scan_results
     
     st.subheader(f"Crawling complete. Found {len(results['links'])} unique links.")
+    
     with st.expander("Show Discovered Links"):
-        for link in list(results['links']):
-            st.write(link)
+        st.markdown(
+            f"""
+            <div style="height: 200px; overflow-y: scroll; padding: 10px; border-radius: 5px;">
+                {'<br>'.join(f"<code>{link}</code>" for link in sorted(list(results['links'])))}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     
     st.subheader("Vulnerability scan complete.")
     
     st.divider()
     st.header("Scan Report")
-    st.code(results['report'], language=None)
+    st.code(results['report'], language=None, height=300)
     
     st.download_button(
         label="Download Report",
